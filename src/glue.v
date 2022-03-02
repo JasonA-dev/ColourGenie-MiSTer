@@ -65,13 +65,29 @@ input wire tape_play,
 );
 //-------------------------------------------------------------------------------------------------
 
-reg[4:0] ce;
 always @(negedge clock) ce <= ce+1'd1;
 
 
 
-assign ce_pix = pe8M8;
+`ifdef VERILATOR
+reg[3:0] ce;
 
+assign ce_pix =pe8M8;
+wire pe8M8 = ce[0] ;
+wire ne8M8 = ~ce[0];
+
+wire ne4M4 = ~ce[0] & ~ce[1] ;
+
+wire pe2M2 = ~ce[0] & ~ce[1] & ce[2];
+wire ne2M2 = ~ce[0] & ~ce[1] & ~ce[2];
+
+wire pe1M1 = ~ce[0] & ~ce[1] & ~ce[2] &  ce[3];
+wire ne1M1 = ~ce[0] & ~ce[1] & ~ce[2] & ~ce[3];
+
+
+`else
+reg[4:0] ce;
+assign ce_pix = pe8M8;
 wire pe8M8 = ~ce[0] &  ce[1];
 wire ne8M8 = ~ce[0] & ~ce[1];
 
@@ -81,7 +97,7 @@ wire pe2M2 = ~ce[0] & ~ce[1] & ~ce[2] &  ce[3];
 wire ne2M2 = ~ce[0] & ~ce[1] & ~ce[2] & ~ce[3];
 
 wire pe1M1 = ~ce[0] & ~ce[1] & ~ce[2] & ~ce[3] &  ce[4];
-
+`endif
 //-------------------------------------------------------------------------------------------------
 
 wire ioF8 = !(!iorq && a[7:0] == 8'hF8); // psg addr

@@ -216,7 +216,7 @@ wire [21:0] gamma_bus;
 wire forced_scandoubler;
 wire  [1:0] buttons;
 wire [31:0] status;
-wire  [1:0] ps2;
+wire  [10:0] ps2_key;
 
 wire        ioctl_download;
 wire  [7:0] ioctl_index;
@@ -237,8 +237,7 @@ hps_io #(.STRLEN($size(CONF_STR)>>3), .PS2DIV(2500)) hps_io
 	.buttons		(buttons),
 	.status		(status),
 //	.status_menumask({status[5]}),
-	.ps2_kbd_clk_out (ps2[0]),
-    .ps2_kbd_data_out(ps2[1]),
+	.ps2_key(ps2_key),
 
 	//ioctl
 	.ioctl_download(ioctl_download),
@@ -309,7 +308,7 @@ glue Glue
 	.audio_l(AUDIO_L),
 	.audio_r(AUDIO_R),
 	.led    (led    ),
-	.ps2    (ps2    ),
+	.ps2_key    (ps2_key    ),
 
 	.tape_play(status[1]),
     .dn_clk	(clk_sys),

@@ -27,18 +27,16 @@ reg[7:0] scancode;
 reg received;
 
 `ifdef MISTER
-reg input_strobe;
-assign received=input_strobe;
-always @(posedge clock ) if (ce) begin
+always @(posedge clock )  begin
 	reg old_state;
 
-	input_strobe <= 0;
+	received <= 0;
 	old_state <= ps2_key[10];
 
 	if(old_state != ps2_key[10]) begin
 		pressed <= ps2_key[9];
 		scancode <= ps2_key[7:0];
-		input_strobe <= 1;
+		received <= 1;
 	end
 end
 `else
@@ -123,11 +121,14 @@ reg[7:0] key[7:0];
 
 always @(posedge clock) if(ce)
 if(received)
+`ifdef MISTER
+  begin
+`else
 	if(scancode == 8'hF0) pressed <= 1'b0; // released
 	else
 	begin
 		pressed <= 1'b1;
-
+`endif
 		case(scancode)
 
 			8'h54: key[0][0] <= pressed; // @
