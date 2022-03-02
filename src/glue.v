@@ -321,7 +321,8 @@ assign d
 	= !mreq ? memQ
 	: !ioF9 ? psgQ
 	: !ioFB ? crtcQ
-	: !ioFF ? { tapelatch|tape,3'b111,widemode, 1'b0, 1'b0, tape|tapebit_val }//tape|tapebit_val }
+	//: !ioFF ? { tapelatch|tape,3'b111,widemode, 1'b0, 1'b0, tape&~tapebit_val}//tape|tapebit_val }
+	: !ioFF ? { 7'b0, tape&~tapelatch}//tape|tapebit_val }
 	: 8'hFF;
 
 
@@ -422,10 +423,16 @@ end
 		    if (io_ram_addr > tape_end) begin
 			    taperead<=1'b0;
 		    end
+
+		    if (!ioFF & !rd) begin
+			    $display("the cpu is reading the tape : %x ",(tape&(~tapelatch)));
+			    tapelatch<=1'b0;
+		    end
+			    
 						  
                     if (iow == 1'b0 & a[7:0] == 8'hff)		// write to tape port
                     begin
-                        
+                       $display("write to tape port %x tapemotor %x q2 x",q,`tapemotor,q[2]); 
                         if ((`tapemotor == 1'b0) & (q[2] == 1'b1))		// if start motor, then reset pointer
                         begin
                             io_ram_addr <= 24'h000000;
