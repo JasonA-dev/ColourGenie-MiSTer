@@ -28,7 +28,11 @@ module glue
    output wire [15:0] audio_l,
    output wire [15:0] audio_r,
 `endif
-	input  wire[ 1:0] ps2,
+`ifdef MISTER
+        input  wire[10:0]ps2_key,               // [7:0] - scancode,
+`else
+        input  wire[1:0] ps2,
+`endif
 	output wire       led,
 `ifdef ZX1
 	output wire       boot,
@@ -225,7 +229,11 @@ keyboard #(.BOOT(8'h0A), .RESET(8'h78)) Keyboard //Boot(F8) - Reset(F11)
 (
 	.clock  (clock  ),
 	.ce     (pe8M8  ),
+`ifdef MISTER
+	.ps2_key    (ps2_key    ),
+`else
 	.ps2    (ps2    ),
+`endif
 	.nmi    (nmi    ),
 	.boot   (boot   ),
 	.reset  (kreset ),

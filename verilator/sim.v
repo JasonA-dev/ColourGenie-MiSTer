@@ -192,7 +192,7 @@ glue Glue
 	.audio_l(AUDIO_L),
 	.audio_r(AUDIO_R),
 	.led    (led    ),
-	.ps2    (ps2    ),
+	.ps2_key    (ps2_key    ),
 
 	.tape_play(1'b0),
     .dn_clk	(clk_sys),

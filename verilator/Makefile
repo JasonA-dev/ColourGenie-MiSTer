@@ -5,7 +5,7 @@ TOP = --top-module emu
 RTL = ../rtl
 V_INC = +incdir+$(RTL) 
 
-V_DEFINE = +define+USE_BRAM=1 +define+USE_CE_PIX +define+USE_BLANK +define+debug=1 +define+SIMULATION=1   -CFLAGS "-I../sim/imgui -I../sim/vinc -I../sim/ -O3"  --timescale-override 1ps/1ps -Wno-TIMESCALEMOD  \
+V_DEFINE = +define+MISTER +define+USE_BRAM=1 +define+USE_CE_PIX +define+USE_BLANK +define+debug=1 +define+SIMULATION=1   -CFLAGS "-I../sim/imgui -I../sim/vinc -I../sim/ -O3"  --timescale-override 1ps/1ps -Wno-TIMESCALEMOD  \
 	-I../$(RTL) \
 	-I../$(RTL)/tv80
 #V_DEFINE += --converge-limit 2000 -Wno-WIDTH -Wno-IMPLICIT -Wno-MODDUP -Wno-UNSIGNED -Wno-CASEINCOMPLETE -Wno-CASEX -Wno-SYMRSVDWORD -Wno-COMBDLY -Wno-INITIALDLY -Wno-BLKANDNBLK -Wno-UNOPTFLAT -Wno-SELRANGE -Wno-CMPCONST -Wno-CASEOVERLAP -Wno-PINMISSING -Wno-MULTIDRIVEN

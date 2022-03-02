@@ -10,7 +10,11 @@ module keyboard
 (
 	input  wire      clock,
 	input  wire      ce,
+`ifdef MISTER
+	input  wire[10:0]ps2_key,		// [7:0] - scancode,
+`else
 	input  wire[1:0] ps2,
+`endif
 	output wire      nmi,
 	output wire      boot,
 	output wire      reset,
@@ -18,6 +22,28 @@ module keyboard
 	input  wire[7:0] a
 );
 //-------------------------------------------------------------------------------------------------
+//
+reg[7:0] scancode;
+reg received;
+
+`ifdef MISTER
+reg input_strobe;
+assign received=input_strobe;
+always @(posedge clock ) if (ce) begin
+	reg old_state;
+
+	input_strobe <= 0;
+	old_state <= ps2_key[10];
+
+	if(old_state != ps2_key[10]) begin
+		pressed <= ps2_key[9];
+		scancode <= ps2_key[7:0];
+		input_strobe <= 1;
+	end
+end
+`else
+reg[8:0] data;
+reg[3:0] count;
 
 reg      ps2c;
 reg      ps2n;
@@ -44,11 +70,7 @@ end
 //-------------------------------------------------------------------------------------------------
 
 reg parity;
-reg received;
 
-reg[8:0] data;
-reg[3:0] count;
-reg[7:0] scancode;
 
 always @(posedge clock) if(ce)
 begin
@@ -82,6 +104,7 @@ begin
 		end
 	end
 end 
+`endif
 
 //-------------------------------------------------------------------------------------------------
 
@@ -209,6 +232,7 @@ assign q =
 	(a[0]&key[0][1])|(a[1]&key[1][1])|(a[2]&key[2][1])|(a[3]&key[3][1])|(a[4]&key[4][1])|(a[5]&key[5][1])|(a[6]&key[6][1])|(a[7]&key[7][1]),
 	(a[0]&key[0][0])|(a[1]&key[1][0])|(a[2]&key[2][0])|(a[3]&key[3][0])|(a[4]&key[4][0])|(a[5]&key[5][0])|(a[6]&key[6][0])|(a[7]&key[7][0])
 };
+
 
 //-------------------------------------------------------------------------------------------------
 endmodule
