@@ -105,8 +105,9 @@ module emu (
 	input [9:0] 		img_mounted,
 	input 			img_readonly,
 
-	input [63:0] 		img_size
+	input [63:0] 		img_size,
 
+	input                   tape_play
 
 
 );
@@ -194,7 +195,7 @@ glue Glue
 	.led    (led    ),
 	.ps2_key    (ps2_key    ),
 
-	.tape_play(1'b0),
+	.tape_play(tape_play),
     .dn_clk	(clk_sys),
     .dn_go (ioctl_download),
     .dn_wr (ioctl_wr),
@@ -224,7 +225,7 @@ initial begin
 	palette[ 0] = 18'b010111_010111_010111; // 5E 5E 5E // 10 // dark grey
 end
 
-wire[17:0] rgbQ = pixel ? palette[color] : 1'd0;
+wire[17:0] rgbQ = pixel ? palette[color] : 18'd0;
 
 assign CLK_VIDEO = clk_sys;
 

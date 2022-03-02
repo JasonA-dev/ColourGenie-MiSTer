@@ -119,7 +119,7 @@ reg del;
 
 reg[7:0] key[7:0];
 
-always @(posedge clock) if(ce)
+always @(posedge clock) /*if(ce)*/
 if(received)
 `ifdef MISTER
   begin

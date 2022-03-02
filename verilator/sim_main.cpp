@@ -35,7 +35,7 @@ int batchSize = 150000;
 bool single_step = 0;
 bool multi_step = 0;
 int multi_step_amount = 1024;
-
+int tape_play;
 // Debug GUI 
 // ---------
 const char* windowTitle = "Verilator Sim: Apple II";
@@ -313,10 +313,11 @@ int main(int argc, char** argv, char** env) {
 		if (ImGui::Button("Multi Step")) { run_enable = 0; multi_step = 1; }
 		//ImGui::SameLine();
 		ImGui::SliderInt("Multi step amount", &multi_step_amount, 8, 1024);
-		if (ImGui::Button("Load Tape"))
+		if (ImGui::Button("Tape Play")) { fprintf(stderr,"tape on\n"); top->tape_play=1; } ImGui::SameLine();
+		if (ImGui::Button("Tape Pause")) { fprintf(stderr,"tape off\n");top->tape_play=0; } ImGui::SameLine();
+		if (ImGui::Button("Load Tape")) 
     ImGuiFileDialog::Instance()->OpenDialog("ChooseFileDlgKey", "Choose File", ".cas", ".");
 
-		if (ImGui::Button("Soft Reset")) { fprintf(stderr,"soft reset\n"); soft_reset=1; } ImGui::SameLine();
 
 		ImGui::End();
 

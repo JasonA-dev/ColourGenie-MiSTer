@@ -373,9 +373,14 @@ ram #(.KB(128)) taperam
         .q      (ram_a_dout ),
         .a      (ram_a_addr )
 );
-	 
+reg [24:0] tape_end;
+
+always @(posedge clock) begin
+ if (dn_wr&dn_go) tape_end <= dn_addr;
+end
+ 
     always @(posedge clock)
-        if ((dn_go == 1'b1 ) | reset == 1'b1)
+        if ((dn_go == 1'b1 ) | reset == 1'b0)
         begin
             io_ram_addr <= 24'h000000;		
             
@@ -405,14 +410,18 @@ ram #(.KB(128)) taperam
                     // sets CPU to top speed on input.
                     //
 						  
-						  if (tape_play && taperead==1'b0)
-						  begin
-						          io_ram_addr <= 24'h000000;
+		  if (tape_play && taperead==1'b0)
+			  begin
+			$display("tape_play set - resetting state machine");
+		          io_ram_addr <= 24'h000000;
                             tape_bitptr <= 7;
                             taperead <= 1'b1;
                             tape_cyccnt <= 12'h000;
 
-						  end
+		  end
+		    if (io_ram_addr > tape_end) begin
+			    taperead<=1'b0;
+		    end
 						  
                     if (iow == 1'b0 & a[7:0] == 8'hff)		// write to tape port
                     begin
@@ -466,6 +475,7 @@ ram #(.KB(128)) taperam
                             begin
                                 io_ram_addr <= io_ram_addr + 1;
                                 tape_bitptr <= 7;
+				$display("io_ram_addr %x ram_a_dout %x",io_ram_addr,ram_a_dout);
                             end
                             else
                                 tape_bitptr <= tape_bitptr - 1;
