@@ -201,6 +201,8 @@ localparam CONF_STR = {
 	"-;",
 	"F1,CAS,Load Cassette;",
 	"-;",
+	"O1,Play,Off,On;",
+	"-;",
 	"O89,Aspect ratio,Original,Full Screen,[ARC1],[ARC2];",
     "OAC,Scandoubler Fx,None,CRT 25%,CRT 50%,CRT 75%,HQ2x;",
 	"OFG,Scale,Normal,V-Integer,Narrower HV-Integer,Wider HV-Integer;",
@@ -287,15 +289,7 @@ wire [15:0] execute_addr;
 wire execute_enable;
 wire loader_wait;
 
-wire trsram_wr;			// Writing loader data to ram 
-wire trsram_download;	// Download in progress (active high)
-wire [23:0] trsram_addr;
-wire [7:0] trsram_data;
 
-assign trsram_wr = loader_download ? loader_wr : ioctl_wr;
-assign trsram_download = loader_download ? loader_download : ioctl_index == 1 ? ioctl_download : 1'b0;
-assign trsram_addr = loader_download ? {8'b0, loader_addr} : {|ioctl_index,ioctl_addr};
-assign trsram_data = loader_download ? loader_data : ioctl_data;
 
 glue Glue
 (
@@ -317,15 +311,13 @@ glue Glue
 	.led    (led    ),
 	.ps2    (ps2    ),
 
+	.tape_play(status[1]),
     .dn_clk	(clk_sys),
-    .dn_go (trsram_download),
-    .dn_wr (trsram_wr),
-    .dn_addr (trsram_addr),
-    .dn_data (trsram_data),
+    .dn_go (ioctl_download),
+    .dn_wr (ioctl_wr),
+    .dn_addr (ioctl_addr),
+    .dn_data (ioctl_data)
     
-    .loader_download (loader_download),
-    .execute_addr (execute_addr),
-    .execute_enable (execute_enable)	
 );
 
 
