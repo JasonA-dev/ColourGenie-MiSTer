@@ -17,6 +17,8 @@
 //  51 Franklin Street, Fifth Floor, Boston, MA 02110-1301 USA.
 //============================================================================
 
+`timescale 1ps / 1ps
+
 module UM6845R
 (
   	input            CLOCK,

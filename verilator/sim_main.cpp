@@ -91,8 +91,8 @@ double sc_time_stamp() {	// Called by $time in Verilog.
 int clk_sys_freq = 24000000;
 SimClock clk_sys(1);
 
-int soft_reset=0;
-vluint64_t soft_reset_time=0;
+int soft_reset = 0;
+vluint64_t soft_reset_time = 0;
 
 // Audio
 // -----
@@ -111,21 +111,21 @@ void resetSim() {
 int verilate() {
 
 	if (!Verilated::gotFinish()) {
-		if (soft_reset){
-			fprintf(stderr,"soft_reset.. in gotFinish\n");
+		if (soft_reset) {
+			fprintf(stderr, "soft_reset.. in gotFinish\n");
 			top->soft_reset = 1;
-			soft_reset=0;
-			soft_reset_time=0;
-			fprintf(stderr,"turning on %x\n",top->soft_reset);
+			soft_reset = 0;
+			soft_reset_time = 0;
+			fprintf(stderr, "turning on %x\n", top->soft_reset);
 		}
 		if (clk_sys.IsRising()) {
 			soft_reset_time++;
 		}
-		if (soft_reset_time==initialReset) {
-			top->soft_reset = 0; 
-			fprintf(stderr,"turning off %x\n",top->soft_reset);
-			fprintf(stderr,"soft_reset_time %d initialReset %x\n",soft_reset_time,initialReset);
-		} 
+		if (soft_reset_time == initialReset) {
+			top->soft_reset = 0;
+			fprintf(stderr, "turning off %x\n", top->soft_reset);
+			fprintf(stderr, "soft_reset_time %d initialReset %x\n", soft_reset_time, initialReset);
+		}
 
 		// Assert reset during startup
 		if (main_time < initialReset) { top->reset = 1; }
@@ -140,13 +140,18 @@ int verilate() {
 
 		// Simulate both edges of system clock
 		if (clk_sys.clk != clk_sys.old) {
-			if (clk_sys.IsRising() && *bus.ioctl_download!=1	) blockdevice.BeforeEval(main_time);
+			if (clk_sys.IsRising() && *bus.ioctl_download != 1) {
+				blockdevice.BeforeEval(main_time);
+			}
 			if (clk_sys.clk) {
 				input.BeforeEval();
 				bus.BeforeEval();
 			}
 			top->eval();
-			if (clk_sys.clk) { bus.AfterEval(); blockdevice.AfterEval(); }
+			if (clk_sys.clk) {
+				bus.AfterEval();
+				blockdevice.AfterEval();
+			}
 		}
 
 #ifndef DISABLE_AUDIO
@@ -157,7 +162,7 @@ int verilate() {
 #endif
 
 		// Output pixels on rising edge of pixel clock
-		if (clk_sys.IsRising() && top->CE_PIXEL ) {
+		if (clk_sys.IsRising() && top->CE_PIXEL) {
 			uint32_t colour = 0xFF000000 | top->VGA_B << 16 | top->VGA_G << 8 | top->VGA_R;
 			video.Clock(top->VGA_HB, top->VGA_VB, top->VGA_HS, top->VGA_VS, colour);
 		}
@@ -211,14 +216,14 @@ int main(int argc, char** argv, char** env) {
 	blockdevice.sd_rd = &top->sd_rd;
 	blockdevice.sd_wr = &top->sd_wr;
 	blockdevice.sd_ack = &top->sd_ack;
-	blockdevice.sd_buff_addr= &top->sd_buff_addr;
-	blockdevice.sd_buff_dout= &top->sd_buff_dout;
-	blockdevice.sd_buff_din[0]= &top->sd_buff_din[0];
-	blockdevice.sd_buff_din[1]= &top->sd_buff_din[1];
-	blockdevice.sd_buff_wr= &top->sd_buff_wr;
-	blockdevice.img_mounted= &top->img_mounted;
-	blockdevice.img_readonly= &top->img_readonly;
-	blockdevice.img_size= &top->img_size;
+	blockdevice.sd_buff_addr = &top->sd_buff_addr;
+	blockdevice.sd_buff_dout = &top->sd_buff_dout;
+	blockdevice.sd_buff_din[0] = &top->sd_buff_din[0];
+	blockdevice.sd_buff_din[1] = &top->sd_buff_din[1];
+	blockdevice.sd_buff_wr = &top->sd_buff_wr;
+	blockdevice.img_mounted = &top->img_mounted;
+	blockdevice.img_readonly = &top->img_readonly;
+	blockdevice.img_size = &top->img_size;
 
 
 #ifndef DISABLE_AUDIO
@@ -260,8 +265,8 @@ int main(int argc, char** argv, char** env) {
 	// Setup video output
 	if (video.Initialise(windowTitle) == 1) { return 1; }
 
-        //bus.QueueDownload("floppy.nib",1,0);
-	blockdevice.MountDisk("floppy.nib",0);
+	//bus.QueueDownload("floppy.nib",1,0);
+	blockdevice.MountDisk("floppy.nib", 0);
 	//blockdevice.MountDisk("hd.hdv",1);
 
 #ifdef WIN32
@@ -313,10 +318,10 @@ int main(int argc, char** argv, char** env) {
 		if (ImGui::Button("Multi Step")) { run_enable = 0; multi_step = 1; }
 		//ImGui::SameLine();
 		ImGui::SliderInt("Multi step amount", &multi_step_amount, 8, 1024);
-		if (ImGui::Button("Tape Play")) { fprintf(stderr,"tape on\n"); top->tape_play=1; } ImGui::SameLine();
-		if (ImGui::Button("Tape Pause")) { fprintf(stderr,"tape off\n");top->tape_play=0; } ImGui::SameLine();
-		if (ImGui::Button("Load Tape")) 
-    ImGuiFileDialog::Instance()->OpenDialog("ChooseFileDlgKey", "Choose File", ".cas", ".");
+		if (ImGui::Button("Tape Play")) { fprintf(stderr, "tape on\n"); top->tape_play = 1; } ImGui::SameLine();
+		if (ImGui::Button("Tape Pause")) { fprintf(stderr, "tape off\n"); top->tape_play = 0; } ImGui::SameLine();
+		if (ImGui::Button("Load Tape"))
+			ImGuiFileDialog::Instance()->OpenDialog("ChooseFileDlgKey", "Choose File", ".cas", ".");
 
 
 		ImGui::End();
@@ -397,22 +402,22 @@ int main(int argc, char** argv, char** env) {
 		ImGui::Image(video.texture_id, ImVec2(video.output_width * VGA_SCALE_X, video.output_height * VGA_SCALE_Y));
 		ImGui::End();
 
-  if (ImGuiFileDialog::Instance()->Display("ChooseFileDlgKey"))
-  {
-    // action if OK
-    if (ImGuiFileDialog::Instance()->IsOk())
-    {
-      std::string filePathName = ImGuiFileDialog::Instance()->GetFilePathName();
-      std::string filePath = ImGuiFileDialog::Instance()->GetCurrentPath();
-      // action
-fprintf(stderr,"filePathName: %s\n",filePathName.c_str());
-fprintf(stderr,"filePath: %s\n",filePath.c_str());
-     bus.QueueDownload(filePathName, 1,0);
-    }
-   
-    // close
-    ImGuiFileDialog::Instance()->Close();
-  }
+		if (ImGuiFileDialog::Instance()->Display("ChooseFileDlgKey"))
+		{
+			// action if OK
+			if (ImGuiFileDialog::Instance()->IsOk())
+			{
+				std::string filePathName = ImGuiFileDialog::Instance()->GetFilePathName();
+				std::string filePath = ImGuiFileDialog::Instance()->GetCurrentPath();
+				// action
+				fprintf(stderr, "filePathName: %s\n", filePathName.c_str());
+				fprintf(stderr, "filePath: %s\n", filePath.c_str());
+				bus.QueueDownload(filePathName, 1, 0);
+			}
+
+			// close
+			ImGuiFileDialog::Instance()->Close();
+		}
 
 
 #ifndef DISABLE_AUDIO
@@ -421,7 +426,7 @@ fprintf(stderr,"filePath: %s\n",filePath.c_str());
 		ImGui::SetWindowPos(windowTitle_Audio, ImVec2(windowX, windowHeight), ImGuiCond_Once);
 		ImGui::SetWindowSize(windowTitle_Audio, ImVec2(windowWidth, 250), ImGuiCond_Once);
 
-		
+
 		//float vol_l = ((signed short)(top->AUDIO_L) / 256.0f) / 256.0f;
 		//float vol_r = ((signed short)(top->AUDIO_R) / 256.0f) / 256.0f;
 		//ImGui::ProgressBar(vol_l + 0.5f, ImVec2(200, 16), 0); ImGui::SameLine();
@@ -431,7 +436,7 @@ fprintf(stderr,"filePath: %s\n",filePath.c_str());
 		if (run_enable) {
 			audio.CollectDebug((signed short)top->AUDIO_L, (signed short)top->AUDIO_R);
 		}
-		int channelWidth = (windowWidth / 2)  -16;
+		int channelWidth = (windowWidth / 2) - 16;
 		ImPlot::CreateContext();
 		if (ImPlot::BeginPlot("Audio - L", ImVec2(channelWidth, 220), ImPlotFlags_NoLegend | ImPlotFlags_NoMenus | ImPlotFlags_NoTitle)) {
 			ImPlot::SetupAxes("T", "A", ImPlotAxisFlags_NoLabel | ImPlotAxisFlags_NoTickMarks, ImPlotAxisFlags_AutoFit | ImPlotAxisFlags_NoLabel | ImPlotAxisFlags_NoTickMarks);
