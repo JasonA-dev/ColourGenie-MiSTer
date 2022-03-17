@@ -100,7 +100,7 @@
     <ClInclude Include="sim\vinc\verilated.h" />
     <ClInclude Include="sim\sim_clock.h" />
     <ClInclude Include="sim\sim_bus.h" />
-    <ClCompile Include="sim\sim_blkdevice.h" />
+    <ClInclude Include="sim\sim_blkdevice.h" />
     <ClInclude Include="sim\sim_console.h" />
     <ClInclude Include="sim\sim_input.h" />
     <ClInclude Include="sim\sim_video.h" />
