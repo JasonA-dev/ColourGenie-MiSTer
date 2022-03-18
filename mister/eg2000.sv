@@ -40,9 +40,9 @@ module emu
 	output [12:0] VIDEO_ARX,
 	output [12:0] VIDEO_ARY,
 
-	output  [7:0] VGA_R,
-	output  [7:0] VGA_G,
-	output  [7:0] VGA_B,
+	output [7:0]  VGA_R,
+	output [7:0]  VGA_G,
+	output [7:0]  VGA_B,
 	output        VGA_HS,
 	output        VGA_VS,
 	output        VGA_DE,    // = ~(VBlank | HBlank)
@@ -62,7 +62,7 @@ module emu
 	//
 	// FB_STRIDE either 0 (rounded to 256 bytes) or multiple of pixel size (in bytes)
 	output        FB_EN,
-	output  [4:0] FB_FORMAT,
+	output [4:0]  FB_FORMAT,
 	output [11:0] FB_WIDTH,
 	output [11:0] FB_HEIGHT,
 	output [31:0] FB_BASE,
@@ -74,7 +74,7 @@ module emu
 	// Palette control for 8bit modes.
 	// Ignored for other video modes.
 	output        FB_PAL_CLK,
-	output  [7:0] FB_PAL_ADDR,
+	output [7:0]  FB_PAL_ADDR,
 	output [23:0] FB_PAL_DOUT,
 	input  [23:0] FB_PAL_DIN,
 	output        FB_PAL_WR,
@@ -85,22 +85,22 @@ module emu
 	// b[1]: 0 - LED status is system status OR'd with b[0]
 	//       1 - LED status is controled solely by b[0]
 	// hint: supply 2'b00 to let the system control the LED.
-	output  [1:0] LED_POWER,
-	output  [1:0] LED_DISK,
+	output [1:0]  LED_POWER,
+	output [1:0]  LED_DISK,
 
 	// I/O board button press simulation (active high)
 	// b[1]: user button
 	// b[0]: osd button
-	output  [1:0] BUTTONS,
+	output [1:0]  BUTTONS,
 
 	input         CLK_AUDIO, // 24.576 MHz
 	output [15:0] AUDIO_L,
 	output [15:0] AUDIO_R,
 	output        AUDIO_S,   // 1 - signed audio samples, 0 - unsigned
-	output  [1:0] AUDIO_MIX, // 0 - no mix, 1 - 25%, 2 - 50%, 3 - 100% (mono)
+	output [1:0]  AUDIO_MIX, // 0 - no mix, 1 - 25%, 2 - 50%, 3 - 100% (mono)
 
 	//ADC
-	inout   [3:0] ADC_BUS,
+	inout  [3:0]  ADC_BUS,
 
 	//SD-SPI
 	output        SD_SCK,
@@ -114,13 +114,13 @@ module emu
 	//Use for non-critical time purposes
 	output        DDRAM_CLK,
 	input         DDRAM_BUSY,
-	output  [7:0] DDRAM_BURSTCNT,
+	output [7:0]  DDRAM_BURSTCNT,
 	output [28:0] DDRAM_ADDR,
 	input  [63:0] DDRAM_DOUT,
 	input         DDRAM_DOUT_READY,
 	output        DDRAM_RD,
 	output [63:0] DDRAM_DIN,
-	output  [7:0] DDRAM_BE,
+	output [7:0]  DDRAM_BE,
 	output        DDRAM_WE,
 `endif
 
@@ -129,7 +129,7 @@ module emu
 	output        SDRAM_CLK,
 	output        SDRAM_CKE,
 	output [12:0] SDRAM_A,
-	output  [1:0] SDRAM_BA,
+	output [1:0]  SDRAM_BA,
 	inout  [15:0] SDRAM_DQ,
 	output        SDRAM_DQML,
 	output        SDRAM_DQMH,
@@ -144,7 +144,7 @@ module emu
 	input         SDRAM2_EN,
 	output        SDRAM2_CLK,
 	output [12:0] SDRAM2_A,
-	output  [1:0] SDRAM2_BA,
+	output [1:0]  SDRAM2_BA,
 	inout  [15:0] SDRAM2_DQ,
 	output        SDRAM2_nCS,
 	output        SDRAM2_nCAS,
@@ -164,8 +164,8 @@ module emu
 	// 1 - D-/TX
 	// 2..6 - USR2..USR6
 	// Set USER_OUT to 1 to read from USER_IN.
-	input   [6:0] USER_IN,
-	output  [6:0] USER_OUT,
+	input  [6:0]  USER_IN,
+	output [6:0]  USER_OUT,
 
 	input         OSD_STATUS
 );
@@ -191,9 +191,7 @@ assign AUDIO_MIX = 0;
 assign LED_POWER = 0;
 assign BUTTONS = 0;
 
-
 //////////////////////////////////////////////////////////////////
-
 
 `include "build_id.v" 
 localparam CONF_STR = {
@@ -213,38 +211,38 @@ localparam CONF_STR = {
 };
 
 wire [21:0] gamma_bus;
-wire forced_scandoubler;
-wire  [1:0] buttons;
+wire 		forced_scandoubler;
+wire [1:0] 	buttons;
 wire [31:0] status;
-wire  [10:0] ps2_key;
+wire [10:0] ps2_key;
 
 wire        ioctl_download;
-wire  [7:0] ioctl_index;
+wire [7:0] 	ioctl_index;
 wire        ioctl_wr;
 wire [24:0] ioctl_addr;
-wire  [7:0] ioctl_data;
+wire [7:0] 	ioctl_data;
 
 // PS2DIV : la mitad del divisor que necesitas para dividir el clk_sys que le das al hpio, para que te de entre 10Khz y 16Kzh
 hps_io #(.STRLEN($size(CONF_STR)>>3), .PS2DIV(2500)) hps_io
 (
-	.clk_sys		(clk_sys),
-	.HPS_BUS		(HPS_BUS),
+	.clk_sys		(clk_sys		),
+	.HPS_BUS		(HPS_BUS		),
 	.EXT_BUS		(),
 
-	.conf_str	(CONF_STR),
+	.conf_str		(CONF_STR		),
 	.forced_scandoubler(forced_scandoubler),
 
-	.buttons		(buttons),
-	.status		(status),
+	.buttons		(buttons		),
+	.status			(status			),
 //	.status_menumask({status[5]}),
-	.ps2_key(ps2_key),
+	.ps2_key		(ps2_key		),
 
 	//ioctl
-	.ioctl_download(ioctl_download),
-	.ioctl_index(ioctl_index),
-	.ioctl_wr(ioctl_wr),
-	.ioctl_addr(ioctl_addr),
-	.ioctl_dout(ioctl_data)   
+	.ioctl_download	(ioctl_download	),
+	.ioctl_index	(ioctl_index	),
+	.ioctl_wr		(ioctl_wr		),
+	.ioctl_addr		(ioctl_addr		),
+	.ioctl_dout		(ioctl_data		)   
   );
 
 ///////////////////////   CLOCKS   ///////////////////////////////
@@ -254,16 +252,13 @@ wire pll_locked;
 
 pll pll
 (
-	.refclk   (CLK_50M),
+	.refclk   (CLK_50M		),
 	.rst      (0),
-	.outclk_0 (clk_sys),
-	.locked   (pll_locked)
+	.outclk_0 (clk_sys		),
+	.locked   (pll_locked	)
 );
 
-
-
 //////////////////////////////////////////////////////////////////
-
 
 wire HBlank;
 wire HSync;
@@ -273,52 +268,48 @@ wire ce_pix;
 wire led;
 wire pixel;
 
-reg[5:0] rs;
+reg [5:0] rs;
 wire power = rs[5] & ~status[0] & ~RESET & ~buttons[1];
 always @(posedge clk_sys) if(!power) rs <= rs+1'd1;
 
 wire[3:0] color;
 
 // signals from loader
-wire loader_wr;		
-wire loader_download;
+wire 		loader_wr;		
+wire 		loader_download;
 wire [15:0] loader_addr;
-wire [7:0] loader_data;
+wire [7:0] 	loader_data;
 wire [15:0] execute_addr;
-wire execute_enable;
-wire loader_wait;
-
-
+wire 		execute_enable;
+wire 		loader_wait;
 
 glue Glue
 (
-	.clock  (clk_sys),
-	//.reset	(reset),
-	.power  (power  ),
-	.hsync  (HSync),
-	.vsync  (VSync),
-	.hblank  (HBlank),
-	.vblank  (VBlank),
+	.clock  	(clk_sys		),
+	//.reset	(reset			),
+	.power  	(power  		),
+	.hsync  	(HSync			),
+	.vsync  	(VSync			),
+	.hblank  	(HBlank			),
+	.vblank  	(VBlank			),
 
-	.ce_pix (ce_pix ),
-	.pixel  (pixel  ),
-	.color  (color  ),
-	.crtcDe (crtcDe_tmp),
-	.tape   (~tape_in),
-	.audio_l(AUDIO_L),
-	.audio_r(AUDIO_R),
-	.led    (led    ),
-	.ps2_key    (ps2_key    ),
+	.ce_pix 	(ce_pix 		),
+	.pixel  	(pixel  		),
+	.color  	(color  		),
+	.crtcDe 	(crtcDe_tmp		),
+	.tape   	(~tape_in		),
+	.audio_l	(AUDIO_L		),
+	.audio_r	(AUDIO_R		),
+	.led    	(led    		),
+	.ps2_key    (ps2_key    	),
 
-	.tape_play(status[1]),
-    .dn_clk	(clk_sys),
-    .dn_go (ioctl_download),
-    .dn_wr (ioctl_wr),
-    .dn_addr (ioctl_addr),
-    .dn_data (ioctl_data)
-    
+	.tape_play	(status[1]		),
+    .dn_clk		(clk_sys		),
+    .dn_go 		(ioctl_download	),
+    .dn_wr 		(ioctl_wr		),
+    .dn_addr 	(ioctl_addr		),
+    .dn_data 	(ioctl_data		)
 );
-
 
 reg[17:0] palette[15:0];
 initial begin
@@ -340,7 +331,7 @@ initial begin
 	palette[ 0] = 18'b010111_010111_010111; // 5E 5E 5E // 10 // dark grey
 end
 
-wire[17:0] rgbQ = pixel ? palette[color] : 1'd0;
+wire [17:0] rgbQ = pixel ? palette[color] : 1'd0;
 
 assign CLK_VIDEO = clk_sys;
 
@@ -379,9 +370,9 @@ video_mixer #(.LINE_LENGTH(640)) video_mixer
 	.VBlank			(VBlank),
 
 	// video output signals
-	.VGA_R			(VGA_R), //output reg [7:0] VGA_R,
-	.VGA_G			(VGA_G), //output reg [7:0] VGA_G,
-	.VGA_B			(VGA_B), //output reg [7:0] VGA_B,
+	.VGA_R			(VGA_R),  //output reg [7:0] VGA_R,
+	.VGA_G			(VGA_G),  //output reg [7:0] VGA_G,
+	.VGA_B			(VGA_B),  //output reg [7:0] VGA_B,
 	.VGA_VS			(VGA_VS), //output reg       VGA_VS,
 	.VGA_HS			(VGA_HS), //output reg       VGA_HS,		
 	.VGA_DE			(VGA_DE), //output reg       VGA_DE,
@@ -391,7 +382,6 @@ video_mixer #(.LINE_LENGTH(640)) video_mixer
    .B         		({rgbQ[ 5: 0],2'b0}),
 	.hq2x      		(scale[2])
 );
-
 
 wire [1:0] ar = status[9:8];
 
@@ -405,36 +395,30 @@ video_freak video_freak
 	.VIDEO_ARX		(VIDEO_ARX), //output reg [12:0] VIDEO_ARX,
 	.VIDEO_ARY		(VIDEO_ARY), //output reg [12:0] VIDEO_ARY,
 	
-	.VGA_DE_IN     (VGA_DE),
-	.VGA_DE        (),
-	.ARX           ((!ar) ? 12'd4 : (ar - 1'd1)),
-	.ARY           ((!ar) ? 12'd3 : 12'd0),
-	.CROP_SIZE     (0),
-	.CROP_OFF      (0),
-	.SCALE         (status[16:15])
+	.VGA_DE_IN     	(VGA_DE),
+	.VGA_DE        	(),
+	.ARX           	((!ar) ? 12'd4 : (ar - 1'd1)),
+	.ARY           	((!ar) ? 12'd3 : 12'd0),
+	.CROP_SIZE     	(0),
+	.CROP_OFF      	(0),
+	.SCALE         	(status[16:15])
 );
 
-
-
-
-//Mister TapeIn
+// MiSTer ADC TapeIn
 
 wire tape_in;
 wire tape_adc, tape_adc_act;
 
 assign tape_in = tape_adc_act & tape_adc;
 
-
-ltc2308_tape  tape
+ltc2308_tape tape
 (
-  .clk		(CLK_50M), 
-  .ADC_BUS	(ADC_BUS),
-  .dout		(tape_adc),
-  .active	(tape_adc_act)
+  .clk		(CLK_50M		), 
+  .ADC_BUS	(ADC_BUS		),
+  .dout		(tape_adc		),
+  .active	(tape_adc_act	)
 );
 
-assign LED_USER    = ~tape_in;
-
-
+assign LED_USER = ~tape_in;
 
 endmodule
