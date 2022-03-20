@@ -29,8 +29,8 @@ module glue
 `ifdef USE_DAC
 	output wire        sound,
 `else
-   output wire [15:0]  audio_l,
-   output wire [15:0]  audio_r,
+	output wire [15:0] audio_l,
+	output wire [15:0] audio_r,
 `endif
 
 `ifdef MISTER
@@ -73,7 +73,7 @@ module glue
 always @(negedge clock) ce <= ce+1'd1;
 
 `ifdef VERILATOR
-reg [3:0] ce;
+reg [ 3:0] ce;
 
 assign ce_pix =pe8M8;
 wire pe8M8 = ce[0] ;
@@ -87,7 +87,7 @@ wire ne2M2 = ~ce[0] & ~ce[1] & ~ce[2];
 wire pe1M1 = ~ce[0] & ~ce[1] & ~ce[2] &  ce[3];
 wire ne1M1 = ~ce[0] & ~ce[1] & ~ce[2] & ~ce[3];
 `else
-reg [4:0] ce;
+reg [ 4:0] ce;
 assign ce_pix = pe8M8;
 wire pe8M8 = ~ce[0] &  ce[1];
 wire ne8M8 = ~ce[0] & ~ce[1];
@@ -99,6 +99,7 @@ wire ne2M2 = ~ce[0] & ~ce[1] & ~ce[2] & ~ce[3];
 
 wire pe1M1 = ~ce[0] & ~ce[1] & ~ce[2] & ~ce[3] &  ce[4];
 `endif
+
 //-------------------------------------------------------------------------------------------------
 
 wire ioF8 = !(!iorq && a[7:0] == 8'hF8); // psg addr
@@ -169,6 +170,7 @@ UM6845R Crtc
 	.DO     (crtcQ  ),
 	.VSYNC  (vsync  ),
 	.HSYNC  (hsync  ),
+
 `ifdef USE_BLANK
 	.HBLANK (hblank ),
 	.VBLANK (vblank ),
@@ -211,9 +213,9 @@ jt49_bus Psg
 
 //-------------------------------------------------------------------------------------------------
 
-wire [7:0] tapesnd = (tapebits[1:0] == 2'b01) ? 8'b01000000 : (tapebits[1:0] == 2'b01 || tapebits[1:0] == 2'b01) ? 8'b00100000 : 8'b00000000;
+wire [ 7:0] tapesnd = (tapebits[1:0] == 2'b01) ? 8'b01000000 : (tapebits[1:0] == 2'b01 || tapebits[1:0] == 2'b01) ? 8'b00100000 : 8'b00000000;
 	
-wire[9:0] dacD = { 2'b00, psgA } + { 2'b00, psgB } + { 2'b00, psgC } + {2'b00,tapesnd};
+wire [ 9:0] dacD = { 2'b00, psgA } + { 2'b00, psgB } + { 2'b00, psgC } + {2'b00,tapesnd};
 
 `ifdef USE_DAC
 dac #(.MSBI(9)) Dac
@@ -224,14 +226,14 @@ dac #(.MSBI(9)) Dac
 	.q      (sound  )
 );
 `else
- assign audio_l = {dacD,6'b0};
- assign audio_r = audio_l;
+assign audio_l = {dacD,6'b0};
+assign audio_r = audio_l;
 `endif
 
 //-------------------------------------------------------------------------------------------------
 
-wire[7:0] keyQ;
-wire[7:0] keyA = a[7:0];
+wire [ 7:0] keyQ;
+wire [ 7:0] keyA = a[ 7:0];
 wire nmi,boot,kreset;
 
 `ifdef ZX1
@@ -242,11 +244,13 @@ wire nmi,boot,kreset;
 (
 	.clock  (clock  ),
 	.ce     (pe8M8  ),
+
 `ifdef MISTER
 	.ps2_key(ps2_key),
 `else
 	.ps2    (ps2    ),
 `endif
+
 	.nmi    (nmi    ),
 	.boot   (boot   ),
 	.reset  (kreset ),
@@ -261,10 +265,10 @@ always @(posedge clock) if(pe2M2) if(!ioFF && !wr) { mode, c, b } <= q[5:3];
 
 //-------------------------------------------------------------------------------------------------
 
-wire[13:0] vma = crtcMa;
-wire[ 2:0] vra = crtcRa[2:0];
+wire [13:0] vma = crtcMa;
+wire [ 2:0] vra = crtcRa[2:0];
 
-wire[ 7:0] memQ;
+wire [ 7:0] memQ;
 wire ven;
 
 memory Memory
@@ -290,6 +294,7 @@ memory Memory
 	.q      (memQ   ),
 	.a      (a      ),
 	.keyQ   (keyQ   ),
+
 `ifdef ZX1 
 	.ramWe  (ramWe  ),
 	.ramDQ  (ramDQ  ),
@@ -308,6 +313,7 @@ memory Memory
 	.ramBA  (ramBA  ),
 	.ramA   (ramA   )
 `endif
+
 );
 
 assign pixel = (ven || cur[1]) && crtcDe;
@@ -326,7 +332,7 @@ assign d
 
 reg [23:0]       io_ram_addr;
     
-reg [2:0]        tapebits;		// motor on/off, plus two bits for output signal level
+reg [ 2:0]        tapebits;		// motor on/off, plus two bits for output signal level
 `define tapemotor tapebits[2]
     
 reg              taperead;		// only when motor is on, 0 = write, 1 = read
@@ -339,8 +345,8 @@ reg              tapelatch;		// represents input bit from cassette (after signal
 //signal tapelatch_resetcnt	: std_logic_vector(3 downto 0) $ "0000";	-- when port is read, reset value - but only after a few cycles
     
 wire [15:0]      cpua;
-wire [7:0]       cpudo;
-wire [7:0]       cpudi;
+wire [ 7:0]      cpudo;
+wire [ 7:0]      cpudi;
 wire             cpuwr;
 wire             cpurd;
 wire             cpumreq;
@@ -356,8 +362,8 @@ reg              widemode;
 
 wire [16:0]      ram_a_addr;
 wire [16:0]      ram_b_addr;
-wire [7:0]       ram_a_dout;
-wire [7:0]       ram_b_dout;
+wire [ 7:0]      ram_a_dout;
+wire [ 7:0]      ram_b_dout;
 
 assign ram_a_addr = dn_wr ? dn_addr[16:0] : io_ram_addr[16:0];
 
@@ -365,12 +371,12 @@ assign ram_a_addr = dn_wr ? dn_addr[16:0] : io_ram_addr[16:0];
 
 ram #(.KB(128)) taperam
 (
-        .clock  (clock      	),
-        .ce     (1'b1       	),
-        .we     (~(dn_wr&dn_go)	),
-        .d      (dn_data       	),
-        .q      (ram_a_dout 	),
-        .a      (ram_a_addr 	)
+    .clock  (clock      	),
+    .ce     (1'b1       	),
+    .we     (~(dn_wr&dn_go)	),
+    .d      (dn_data       	),
+    .q      (ram_a_dout 	),
+    .a      (ram_a_addr 	)
 );
 reg [24:0] tape_end;
 
@@ -413,6 +419,7 @@ always @(posedge clock)
                	tape_cyccnt <= 12'h000;
 		  	end
 
+           	$display("io_ram_addr %x, tape_end %x", io_ram_addr, tape_end); 	
 		    if (io_ram_addr > tape_end) 
 			begin
 			    taperead<=1'b0;
@@ -428,14 +435,14 @@ always @(posedge clock)
 
 	        if (iow == 1'b0 & a[7:0] == 8'hff)					// write to tape port
             begin
-                $display("write to tape port %x tapemotor %x q2 x", q, `tapemotor,q[2]); 
+                $display("write to tape port %x tapemotor %x q2 x", q, `tapemotor, q[2]); 
+
                 if ((`tapemotor == 1'b0) & (q[2] == 1'b1))		// if start motor, then reset pointer
                 begin
                     io_ram_addr <= 24'h000000;
                     tape_bitptr <= 7;
                     taperead <= 1'b0;
-                end
-                        
+                end 
                 else if ((`tapemotor == 1'b1) & (q[2] == 1'b0))	// if stop motor, then reset tape read status
                     taperead <= 1'b0;
                         
@@ -443,9 +450,13 @@ always @(posedge clock)
                 widemode <= q[3];
                 tapelatch <= 1'b0;		// tapelatch is set by cassette data bit, and only reset by write to port $FF
             end
-                    
+
+           	$display("ior %x, a[7:0] %x", ior, a[7:0]); 	
+
             if (ior == 1'b0 & a[7:0] == 8'hff)
             begin
+                $display("tapemotor %x taperead %x", `tapemotor, `taperead); 
+
                 if (`tapemotor == 1'b1 & taperead == 1'b0)		// reading the port while motor is on implies tape playback
                 begin
                     taperead <= 1'b1;
@@ -454,7 +465,8 @@ always @(posedge clock)
             end
 
             // tape_leadin <= x"00";
-                    
+            $display("taperead %x", `taperead); 
+
             if (taperead == 1'b1)
             begin
                 tape_cyccnt <= tape_cyccnt + 1;	// count in *CPU* cycles, regardless of clock speed
