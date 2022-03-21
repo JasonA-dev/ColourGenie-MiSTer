@@ -215,7 +215,7 @@ jt49_bus Psg
 
 wire [ 7:0] tapesnd = (tapebits[1:0] == 2'b01) ? 8'b01000000 : (tapebits[1:0] == 2'b01 || tapebits[1:0] == 2'b01) ? 8'b00100000 : 8'b00000000;
 	
-wire [ 9:0] dacD = { 2'b00, psgA } + { 2'b00, psgB } + { 2'b00, psgC } + {2'b00,tapesnd};
+wire [ 9:0] dacD = { 2'b00, psgA } + { 2'b00, psgB } + { 2'b00, psgC } + { 2'b00, tapesnd };
 
 `ifdef USE_DAC
 dac #(.MSBI(9)) Dac
@@ -300,7 +300,7 @@ memory Memory
 	.ramDQ  (ramDQ  ),
 	.ramA   (ramA   )
 `elsif USE_BRAM 
-   .filler (       	)	
+	.filler (       )	
 `elsif USE_SDRAM
 	.ramCk  (ramCk  ),
 	.ramCe  (ramCe  ),
@@ -331,19 +331,19 @@ assign d
 //-------------------------------------------------------------------------------------------------
 
 reg [23:0]       io_ram_addr;
-    
+
 reg [ 2:0]        tapebits;		// motor on/off, plus two bits for output signal level
 `define tapemotor tapebits[2]
-    
+
 reg              taperead;		// only when motor is on, 0 = write, 1 = read
 reg [11:0]       tape_cyccnt;	// CPU cycle counter for cassette carrier signal
 //signal tape_leadin	: std_logic_vector(7 downto 0);		-- additional 128 bits for sync-up, just in case
 integer          tape_bitptr;
-    
+
 reg              tapebit_val;	// represents bit being sent from cassette file
 reg              tapelatch;		// represents input bit from cassette (after signal conditioning)
 //signal tapelatch_resetcnt	: std_logic_vector(3 downto 0) $ "0000";	-- when port is read, reset value - but only after a few cycles
-    
+
 wire [15:0]      cpua;
 wire [ 7:0]      cpudo;
 wire [ 7:0]      cpudi;
@@ -378,11 +378,12 @@ ram #(.KB(128)) taperam
     .q      (ram_a_dout 	),
     .a      (ram_a_addr 	)
 );
+
 reg [24:0] tape_end;
 
 always @(posedge clock) 
 begin
-	if (dn_wr&dn_go) 
+	if (dn_wr & dn_go) 
 	begin
 		tape_end <= dn_addr;
 		//$display("tape_end %x", tape_end);		
@@ -392,7 +393,8 @@ end
 always @(posedge clock)
     if ((dn_go == 1'b1 ) | reset == 1'b0)
     begin
-        io_ram_addr <= 24'h000000;		
+        io_ram_addr <= 24'h010000;		// 24'h000000;
+
         tapebits <= 3'b000;
         tape_cyccnt <= 12'h000;
         // tape_leadin <= x"00";
@@ -403,7 +405,7 @@ always @(posedge clock)
     // tapelatch_resetcnt <="0000";
     begin
         cpuclk_r <= pe2M2;
-                
+        
         if ((cpuclk_r != pe2M2) & pe2M2 == 1'b1)
         begin
             //----  Cassette data I/O (covers port $FF) ------
@@ -413,6 +415,7 @@ always @(posedge clock)
             // Since loading a 13KB fie takes several minutes at regular speed, this version automatically
             // sets CPU to top speed on input.
             //
+			/*
 	  		if (tape_play && taperead==1'b0)
 			begin
 				$display("tape_play set - resetting state machine");
@@ -434,7 +437,22 @@ always @(posedge clock)
 		    	$display("the cpu is reading the tape : %x ", (tape&(~tapelatch)));
 		    	tapelatch<=1'b0;
 	    	end
-			    
+			*/
+
+			if((iow == 1'b0) & (a[7:2] == 1'b1)) 
+			begin							// write to port 4 5 6
+				case (a[1:0]) 
+					2'b00 : io_ram_addr[7:0] <= q;					// sets address of memory-read pointer
+					2'b01 : io_ram_addr[15:8] <= q;
+					2'b10 : io_ram_addr[23:16] <= q;
+				endcase
+			end 
+
+			//iorrd_r<=iorrd;
+			//if (((iorrd==1'b0) & (iorrd_r == 1'b1)) & (a[7:2] == 1'b1))	// read from port 4 reads memory directly
+			//	io_ram_addr <= io_ram_addr + 1;
+
+
            	//$display("iow %x, a[7:0] %x", iow, a[7:0]); 	
 
 	        if (iow == 1'b0 & a[7:0] == 8'hff)					// write to tape port
@@ -443,13 +461,13 @@ always @(posedge clock)
 
                 if ((`tapemotor == 1'b0) & (q[2] == 1'b1))		// if start motor, then reset pointer
                 begin
-                    io_ram_addr <= 24'h000000;
+                    io_ram_addr <= 24'h010000;   // 24'h000000;
                     tape_bitptr <= 7;
                     taperead <= 1'b0;
                 end 
                 else if ((`tapemotor == 1'b1) & (q[2] == 1'b0))	// if stop motor, then reset tape read status
                     taperead <= 1'b0;
-                        
+                
                 tapebits <= q[2:0];
                 widemode <= q[3];
                 tapelatch <= 1'b0;		// tapelatch is set by cassette data bit, and only reset by write to port $FF
@@ -462,8 +480,8 @@ always @(posedge clock)
                 //$display("tapemotor %x taperead %x", `tapemotor, taperead); 
 				//$display("tapebits 0=%x 1=%x 2=%x ", tapebits[0:0], tapebits[1:0], tapebits[2:0]); 
 
-                //if (`tapemotor == 1'b1 & taperead == 1'b0)		// reading the port while motor is on implies tape playback
-                if (taperead == 1'b0)		// reading the port while motor is on implies tape playback				
+                if (`tapemotor == 1'b1 & taperead == 1'b0)		// reading the port while motor is on implies tape playback
+                //if (taperead == 1'b0)		// reading the port while motor is on implies tape playback				
                 begin
                     taperead <= 1'b1;
                     tape_cyccnt <= 12'h000;
@@ -476,22 +494,22 @@ always @(posedge clock)
             if (taperead == 1'b1)
             begin
                 tape_cyccnt <= tape_cyccnt + 1;	// count in *CPU* cycles, regardless of clock speed
-                        
+                
                 if (tape_cyccnt < 12'h200)		// fixed-timing sync clock bit - hold the signal high for a bit
                     tapelatch <= 1'b1;			// DO NOT reset the latch until port is read
 
                 // ! uncomment the following line when debugging cassette input:
-                tapebits[1:0] <= 2'b01;			//-- ** make a noise  ** remove when working
+                //tapebits[1:0] <= 2'b01;			//-- ** make a noise  ** remove when working
 
                 if (tape_cyccnt == 12'h6ff)		// after 1791 cycles (~1ms @ normal clk), actual data bit is written only if it's a '1'
                 begin
                     // timing reverse-engineered from Level II ROM cassette write routine
                     tapebit_val <= ram_a_dout[tape_bitptr];
-                            
+                    
                     // ! uncomment the following lines when debugging cassette input:
-                    if (ram_a_dout[tape_bitptr] == 1'b1)	// ** make a noise
-                       	tapebits[1:0] <= 2'b01;				// ** remove when working
-                            
+                    //if (ram_a_dout[tape_bitptr] == 1'b1)	// ** make a noise
+                    //   	tapebits[1:0] <= 2'b01;			// ** remove when working
+                    
                     if (tape_bitptr == 0)
                     begin
                         io_ram_addr <= io_ram_addr + 1;
@@ -501,7 +519,7 @@ always @(posedge clock)
                     else
                         tape_bitptr <= tape_bitptr - 1;
                 end
-                        
+                
                 if (tape_cyccnt > 12'h6ff & tape_cyccnt < 12'h8ff)
                 begin
                     if (tapebit_val == 1'b1)	// if set, hold it for 200 cycles like a real tape
@@ -509,8 +527,8 @@ always @(posedge clock)
                 end
 
                 // ! uncomment the following line when debugging cassette input:
-                tapebits[1:0] <= 2'b01;			//-- ** make a noise  ** remove when working
-                        
+                //tapebits[1:0] <= 2'b01;			//-- ** make a noise  ** remove when working
+                
                 if (tape_cyccnt >= 12'he08)		// after 3582 cycles (~2ms), sync signal is written (and cycle reset)
                     tape_cyccnt <= 12'h000;
             end

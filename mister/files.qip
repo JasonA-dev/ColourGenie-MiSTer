@@ -3,7 +3,7 @@ set_global_assignment -name VERILOG_FILE ../src/rom.v
 set_global_assignment -name VERILOG_FILE ../src/ram.v
 set_global_assignment -name VERILOG_FILE ../src/memory.v
 set_global_assignment -name VERILOG_FILE ../src/keyboard.v
-set_global_assignment -name VERILOG_FILE ../src/glue.v
+set_global_assignment -name VERILOG_FILE ../src/eg2000.v
 set_global_assignment -name VERILOG_FILE ../src/dprs.v
 set_global_assignment -name VERILOG_FILE ../src/dprf.v
 set_global_assignment -name VERILOG_FILE ../src/dac.v

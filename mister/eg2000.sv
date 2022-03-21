@@ -243,7 +243,7 @@ hps_io #(.STRLEN($size(CONF_STR)>>3), .PS2DIV(2500)) hps_io
 	.ioctl_wr		(ioctl_wr		),
 	.ioctl_addr		(ioctl_addr		),
 	.ioctl_dout		(ioctl_data		)   
-  );
+);
 
 ///////////////////////   CLOCKS   ///////////////////////////////
 
@@ -379,10 +379,10 @@ video_mixer #(.LINE_LENGTH(640)) video_mixer
 	.VGA_VS			(VGA_VS), //output reg       VGA_VS,
 	.VGA_HS			(VGA_HS), //output reg       VGA_HS,		
 	.VGA_DE			(VGA_DE), //output reg       VGA_DE,
-		
+	
 	.R         		({rgbQ[17:12],2'b0}),
-   .G         		({rgbQ[11: 6],2'b0}),
-   .B         		({rgbQ[ 5: 0],2'b0}),
+	.G         		({rgbQ[11: 6],2'b0}),
+	.B         		({rgbQ[ 5: 0],2'b0}),
 	.hq2x      		(scale[2])
 );
 
@@ -416,10 +416,10 @@ assign tape_in = tape_adc_act & tape_adc;
 
 ltc2308_tape tape
 (
-  .clk		(CLK_50M		), 
-  .ADC_BUS	(ADC_BUS		),
-  .dout		(tape_adc		),
-  .active	(tape_adc_act	)
+	.clk		(CLK_50M		), 
+	.ADC_BUS	(ADC_BUS		),
+	.dout		(tape_adc		),
+	.active	(tape_adc_act	)
 );
 
 assign LED_USER = ~tape_in;
