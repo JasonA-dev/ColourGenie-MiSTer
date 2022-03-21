@@ -1,7 +1,7 @@
 `timescale 1ps / 1ps
 
 //-------------------------------------------------------------------------------------------------
-module glue
+module eg2000
 //-------------------------------------------------------------------------------------------------
 (
 	input  wire        clock,
@@ -382,14 +382,17 @@ reg [24:0] tape_end;
 
 always @(posedge clock) 
 begin
-	if (dn_wr&dn_go) tape_end <= dn_addr;
+	if (dn_wr&dn_go) 
+	begin
+		tape_end <= dn_addr;
+		//$display("tape_end %x", tape_end);		
+	end
 end
 
 always @(posedge clock)
     if ((dn_go == 1'b1 ) | reset == 1'b0)
     begin
         io_ram_addr <= 24'h000000;		
-            
         tapebits <= 3'b000;
         tape_cyccnt <= 12'h000;
         // tape_leadin <= x"00";
@@ -419,9 +422,10 @@ always @(posedge clock)
                	tape_cyccnt <= 12'h000;
 		  	end
 
-           	$display("io_ram_addr %x, tape_end %x", io_ram_addr, tape_end); 	
+			// forces the tape to stop reading if the ram address is larger than the read length
 		    if (io_ram_addr > tape_end) 
 			begin
+				//$display("io_ram_addr > tape_end");
 			    taperead<=1'b0;
 	    	end
 
@@ -431,11 +435,11 @@ always @(posedge clock)
 		    	tapelatch<=1'b0;
 	    	end
 			    
-           	$display("iow %x, a[7:0] %x", iow, a[7:0]); 	
+           	//$display("iow %x, a[7:0] %x", iow, a[7:0]); 	
 
 	        if (iow == 1'b0 & a[7:0] == 8'hff)					// write to tape port
             begin
-                $display("write to tape port %x tapemotor %x q2 x", q, `tapemotor, q[2]); 
+                //$display("write to tape port %x tapemotor %x q2 x", q, `tapemotor, q[2]); 
 
                 if ((`tapemotor == 1'b0) & (q[2] == 1'b1))		// if start motor, then reset pointer
                 begin
@@ -451,13 +455,15 @@ always @(posedge clock)
                 tapelatch <= 1'b0;		// tapelatch is set by cassette data bit, and only reset by write to port $FF
             end
 
-           	$display("ior %x, a[7:0] %x", ior, a[7:0]); 	
+           	//$display("ior %x, a[7:0] %x", ior, a[7:0]); 	
 
             if (ior == 1'b0 & a[7:0] == 8'hff)
             begin
-                $display("tapemotor %x taperead %x", `tapemotor, `taperead); 
+                //$display("tapemotor %x taperead %x", `tapemotor, taperead); 
+				//$display("tapebits 0=%x 1=%x 2=%x ", tapebits[0:0], tapebits[1:0], tapebits[2:0]); 
 
-                if (`tapemotor == 1'b1 & taperead == 1'b0)		// reading the port while motor is on implies tape playback
+                //if (`tapemotor == 1'b1 & taperead == 1'b0)		// reading the port while motor is on implies tape playback
+                if (taperead == 1'b0)		// reading the port while motor is on implies tape playback				
                 begin
                     taperead <= 1'b1;
                     tape_cyccnt <= 12'h000;
@@ -465,7 +471,7 @@ always @(posedge clock)
             end
 
             // tape_leadin <= x"00";
-            $display("taperead %x", `taperead); 
+            //$display("taperead %x", taperead); 
 
             if (taperead == 1'b1)
             begin
@@ -490,7 +496,7 @@ always @(posedge clock)
                     begin
                         io_ram_addr <= io_ram_addr + 1;
                         tape_bitptr <= 7;
-						$display("io_ram_addr %x ram_a_dout %x", io_ram_addr, ram_a_dout);
+						//$display("io_ram_addr %x ram_a_dout %x", io_ram_addr, ram_a_dout);
                     end
                     else
                         tape_bitptr <= tape_bitptr - 1;

@@ -283,7 +283,7 @@ wire [15:0] execute_addr;
 wire 		execute_enable;
 wire 		loader_wait;
 
-glue Glue
+eg2000 eg2000
 (
 	.clock  	(clk_sys		),
 	//.reset	(reset			),
@@ -297,13 +297,16 @@ glue Glue
 	.pixel  	(pixel  		),
 	.color  	(color  		),
 	.crtcDe 	(crtcDe_tmp		),
+	
 	.tape   	(~tape_in		),
+
 	.audio_l	(AUDIO_L		),
 	.audio_r	(AUDIO_R		),
 	.led    	(led    		),
 	.ps2_key    (ps2_key    	),
 
 	.tape_play	(status[1]		),
+
     .dn_clk		(clk_sys		),
     .dn_go 		(ioctl_download	),
     .dn_wr 		(ioctl_wr		),

@@ -38,7 +38,7 @@ int multi_step_amount = 1024;
 int tape_play;
 // Debug GUI 
 // ---------
-const char* windowTitle = "Verilator Sim: Apple II";
+const char* windowTitle = "Verilator Sim: ColourGenie eg2000";
 const char* windowTitle_Control = "Simulation control";
 const char* windowTitle_DebugLog = "Debug log";
 const char* windowTitle_Video = "VGA output";

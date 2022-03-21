@@ -175,7 +175,7 @@ wire loader_wait;
 
 
 
-glue Glue
+eg2000 eg2000
 (
 	.clock  (clk_sys),
 	//.reset	(reset),
