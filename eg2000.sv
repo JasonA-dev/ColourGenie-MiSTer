@@ -26,7 +26,7 @@ module emu
 	input         RESET,
 
 	//Must be passed to hps_io module
-	inout  [45:0] HPS_BUS,
+	inout  [48:0] HPS_BUS,
 
 	//Base video clock. Usually equals to CLK_SYS.
 	output        CLK_VIDEO,
@@ -52,8 +52,9 @@ module emu
 
 	input  [11:0] HDMI_WIDTH,
 	input  [11:0] HDMI_HEIGHT,
+	output        HDMI_FREEZE,	
 
-`ifdef USE_FB
+`ifdef MISTER_FB
 	// Use framebuffer in DDRAM (USE_FB=1 in qsf)
 	// FB_FORMAT:
 	//    [2:0] : 011=8bpp(palette) 100=16bpp 101=24bpp 110=32bpp
@@ -62,7 +63,7 @@ module emu
 	//
 	// FB_STRIDE either 0 (rounded to 256 bytes) or multiple of pixel size (in bytes)
 	output        FB_EN,
-	output [4:0]  FB_FORMAT,
+	output  [4:0] FB_FORMAT,
 	output [11:0] FB_WIDTH,
 	output [11:0] FB_HEIGHT,
 	output [31:0] FB_BASE,
@@ -71,13 +72,15 @@ module emu
 	input         FB_LL,
 	output        FB_FORCE_BLANK,
 
+`ifdef MISTER_FB_PALETTE
 	// Palette control for 8bit modes.
 	// Ignored for other video modes.
 	output        FB_PAL_CLK,
-	output [7:0]  FB_PAL_ADDR,
+	output  [7:0] FB_PAL_ADDR,
 	output [23:0] FB_PAL_DOUT,
 	input  [23:0] FB_PAL_DIN,
 	output        FB_PAL_WR,
+`endif
 `endif
 
 	output        LED_USER,  // 1 - ON, 0 - OFF.
@@ -109,27 +112,24 @@ module emu
 	output        SD_CS,
 	input         SD_CD,
 
-`ifdef USE_DDRAM
 	//High latency DDR3 RAM interface
 	//Use for non-critical time purposes
 	output        DDRAM_CLK,
 	input         DDRAM_BUSY,
-	output [7:0]  DDRAM_BURSTCNT,
+	output  [7:0] DDRAM_BURSTCNT,
 	output [28:0] DDRAM_ADDR,
 	input  [63:0] DDRAM_DOUT,
 	input         DDRAM_DOUT_READY,
 	output        DDRAM_RD,
 	output [63:0] DDRAM_DIN,
-	output [7:0]  DDRAM_BE,
+	output  [7:0] DDRAM_BE,
 	output        DDRAM_WE,
-`endif
 
-`ifdef USE_SDRAM
 	//SDRAM interface with lower latency
 	output        SDRAM_CLK,
 	output        SDRAM_CKE,
 	output [12:0] SDRAM_A,
-	output [1:0]  SDRAM_BA,
+	output  [1:0] SDRAM_BA,
 	inout  [15:0] SDRAM_DQ,
 	output        SDRAM_DQML,
 	output        SDRAM_DQMH,
@@ -137,14 +137,14 @@ module emu
 	output        SDRAM_nCAS,
 	output        SDRAM_nRAS,
 	output        SDRAM_nWE,
-`endif
 
-`ifdef DUAL_SDRAM
+`ifdef MISTER_DUAL_SDRAM
 	//Secondary SDRAM
+	//Set all output SDRAM_* signals to Z ASAP if SDRAM2_EN is 0
 	input         SDRAM2_EN,
 	output        SDRAM2_CLK,
 	output [12:0] SDRAM2_A,
-	output [1:0]  SDRAM2_BA,
+	output  [1:0] SDRAM2_BA,
 	inout  [15:0] SDRAM2_DQ,
 	output        SDRAM2_nCS,
 	output        SDRAM2_nCAS,
@@ -164,8 +164,8 @@ module emu
 	// 1 - D-/TX
 	// 2..6 - USR2..USR6
 	// Set USER_OUT to 1 to read from USER_IN.
-	input  [6:0]  USER_IN,
-	output [6:0]  USER_OUT,
+	input   [6:0] USER_IN,
+	output  [6:0] USER_OUT,
 
 	input         OSD_STATUS
 );
@@ -179,19 +179,21 @@ assign {SD_SCK, SD_MOSI, SD_CS} = 'Z;
 assign {SDRAM_DQ, SDRAM_A, SDRAM_BA, SDRAM_CLK, SDRAM_CKE, SDRAM_DQML, SDRAM_DQMH, SDRAM_nWE, SDRAM_nCAS, SDRAM_nRAS, SDRAM_nCS} = 'Z;
 assign {DDRAM_CLK, DDRAM_BURSTCNT, DDRAM_ADDR, DDRAM_DIN, DDRAM_BE, DDRAM_RD, DDRAM_WE} = '0;  
 
-assign VGA_SL = (scale[2]==1'b1)?2'd0:scale[1:0];
-
+assign VGA_SL = 0;
 assign VGA_F1 = 0;
 assign VGA_SCALER = 0;
+assign HDMI_FREEZE = 0;
 
 assign AUDIO_S = 0;
 assign AUDIO_MIX = 0;
 
-//assign LED_DISK = 0;
+assign LED_DISK = 0;
 assign LED_POWER = 0;
 assign BUTTONS = 0;
 
 //////////////////////////////////////////////////////////////////
+
+wire [1:0] ar = status[9:8];
 
 `include "build_id.v" 
 localparam CONF_STR = {
@@ -223,13 +225,12 @@ wire [24:0] ioctl_addr;
 wire [7:0] 	ioctl_data;
 
 // PS2DIV : la mitad del divisor que necesitas para dividir el clk_sys que le das al hpio, para que te de entre 10Khz y 16Kzh
-hps_io #(.STRLEN($size(CONF_STR)>>3), .PS2DIV(2500)) hps_io
+hps_io #(.CONF_STR(CONF_STR)) hps_io
 (
 	.clk_sys		(clk_sys		),
 	.HPS_BUS		(HPS_BUS		),
 	.EXT_BUS		(),
 
-	.conf_str		(CONF_STR		),
 	.forced_scandoubler(forced_scandoubler),
 
 	.buttons		(buttons		),
@@ -260,6 +261,8 @@ pll pll
 
 //////////////////////////////////////////////////////////////////
 
+wire [1:0] col = status[4:3];
+
 wire HBlank;
 wire HSync;
 wire VBlank;
@@ -267,6 +270,8 @@ wire VSync;
 wire ce_pix;
 wire led;
 wire pixel;
+
+wire [7:0] video;
 
 reg [5:0] rs;
 wire power = rs[5] & ~status[0] & ~RESET & ~buttons[1];
@@ -343,22 +348,9 @@ wire scandoubler = scale || forced_scandoubler;
 wire [2:0] scale = status[12:10];
 wire crtcDe_tmp;
 
-// YOM Sin Video_Mixer ni Video_Freak
-//assign CE_PIXEL = ce_pix;
-//assign VGA_R = {rgbQ[17:12],2'b0};
-//assign VGA_G = {rgbQ[11: 6],2'b0};
-//assign VGA_B = {rgbQ[ 5: 0],2'b0};
-//assign VGA_VS = VSync;
-//assign VGA_HS = HSync;
-//assign VGA_DE = crtcDe_tmp;//~(VBlank | HBlank);
-//
-//assign VIDEO_ARX = 4;
-//assign VIDEO_ARY = 3;
-
-// YOM Sin Video_Freak pero si con video_mixer
-//assign VIDEO_ARX = 4;
-//assign VIDEO_ARY = 3;
-//assign VGA_DE = crtcDe_tmp;
+reg  [26:0] act_cnt;
+always @(posedge clk_sys) act_cnt <= act_cnt + 1'd1; 
+assign LED_USER    = act_cnt[26]  ? act_cnt[25:18]  > act_cnt[7:0]  : act_cnt[25:18]  <= act_cnt[7:0];
 
 video_mixer #(.LINE_LENGTH(640)) video_mixer
 (
@@ -385,8 +377,6 @@ video_mixer #(.LINE_LENGTH(640)) video_mixer
 	.B         		({rgbQ[ 5: 0],2'b0}),
 	.hq2x      		(scale[2])
 );
-
-wire [1:0] ar = status[9:8];
 
 video_freak video_freak
 (
@@ -421,7 +411,5 @@ ltc2308_tape tape
 	.dout		(tape_adc		),
 	.active	(tape_adc_act	)
 );
-
-assign LED_USER = ~tape_in;
 
 endmodule
